@@ -3,36 +3,49 @@ import time
 import random
 
 # Sample data for updating parameters (except locations)
-update_data = {
-    'Status': ['MODERATE', 'GOOD', 'POOR', 'POOR', 'MODERATE'],
-    'AQI-IN': [random.randint(20, 110) for _ in range(5)],
-    'PM2.5': [random.randint(0, 60) for _ in range(5)],
-    'PM10': [random.randint(20, 110) for _ in range(5)],
-    'Temp': [random.uniform(28, 31) for _ in range(5)],
-    'Humid': [random.randint(60, 70) for _ in range(5)],
-}
+def generate_random_data():
+    status_options = ['MODERATE', 'GOOD', 'POOR']
+    aqi_in = random.randint(20, 110)
+    pm25 = random.randint(0, 60)
+    pm10 = random.randint(20, 110)
+    temp = random.uniform(28, 31)
+    humid = random.randint(60, 70)
+    return random.choice(status_options), aqi_in, pm25, pm10, temp, humid
 
-# Load the existing dataset
+# Define the initial dataset with all locations
 data = {
     'Locations': [
-        'ARK Serene County', 'Bapuji Nagar', 'BETHANY SCH', 'BLR 103', 'BLR 76'
+        'ARK Serene County', 'Bapuji Nagar', 'BETHANY SCH', 'BLR 103', 'BLR 76',
+        'Bommanhalli', 'Brigade Road', 'Brookefield', 'Btm', 'BTM Layout',
+        'Bwssb Kadabesanahalli', 'Chansandra', 'Chinnapanhalli', 'City Railway Station',
+        'Cox Town', 'CV Raman Nagar', 'Devasthanagalu', 'Doddanekundi', 'Ejipura',
+        'Harlur', 'Hebbal', 'Hombegowda Nagar', 'Indian Institute of Mgmt', 'ISRO Colony',
+        'Jayanagar 5Th Block', 'Kalyan Nagar', 'Koramangala', 'Krishnarajapura',
+        'Kundalahalli Colony', 'Maruthi Nagar', 'Mathikare', 'Nagashetty Hall',
+        'Neeladri Nagar', 'NR Colony MH', 'Peenya', 'PES University', 'Prestige Park View',
+        'Saneguravahalli', 'Sanjaynagar', 'Siddapura', 'Silk Board', 'SIPCOT Phase 1',
+        'SJRI 34', 'Tavarekere', 'Venkatachary Nagar', 'Vijay Nagar', 'Whitefield'
     ],
-    'Status': ['MODERATE', 'GOOD', 'POOR', 'POOR', 'MODERATE'],
-    'AQI-IN': [29, 48, 92, 80, 80],
-    'PM2.5': [16, 12, 55, 38, 39],
-    'PM10': [29, 48, 88, 56, 57],
-    'Temp': [31, 28, 31, 31, 28],
-    'Humid': [62, 70, 60, 60, 60]
+    'Status': ['MODERATE'] * 50,
+    'AQI-IN': [29] * 50,
+    'PM2.5': [16] * 50,
+    'PM10': [29] * 50,
+    'Temp': [31] * 50,
+    'Humid': [62] * 50
 }
 
 df = pd.DataFrame(data)
 
 while True:
     # Update parameters (except Locations) with new data
-    for i, location in enumerate(df['Locations']):
-        for column in update_data:
-            if column != 'Locations':
-                df.at[i, column] = update_data[column][i]
+    for i in range(len(df)):
+        status, aqi_in, pm25, pm10, temp, humid = generate_random_data()
+        df.at[i, 'Status'] = status
+        df.at[i, 'AQI-IN'] = aqi_in
+        df.at[i, 'PM2.5'] = pm25
+        df.at[i, 'PM10'] = pm10
+        df.at[i, 'Temp'] = temp
+        df.at[i, 'Humid'] = humid
     
     # Display the updated DataFrame
     print(df)
