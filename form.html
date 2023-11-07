@@ -1,0 +1,40 @@
+<html>
+    <head>
+ <style>
+form{
+border:8px double blueviolet;
+background-color:white;
+text-align: center;
+width:40%;
+height:40%;
+font-size: medium;
+font-weight: bold;
+padding:50px;
+
+}
+table{
+    padding:30px;
+    border-spacing: 30px;
+}
+</style>
+
+</head>
+    <body style="background-image:linear-gradient(cyan,blue)">
+        <center>
+        <form method="POST" action="/get_data">
+        <input type="submit" value="Get Pollution Data at Kormangala">
+        </form>
+        <br/><br/>
+        <form method="POST"> 
+            <h2>Get Route Options </h2>
+            <table>
+            <tr><td><label>Enter Origin </label></td><td><input id='origin' name='origin' type="text"></td></tr>
+            <tr><td><label>Enter Destination </label></td><td><input id="destination" name='destination' type="destination"></td></tr>
+            <tr><td><input type="submit" value="Get Route Options">
+            </td><td><input type="reset"></td></tr></table>
+
+
+        </form>
+    </center>
+    </body>
+</html>
