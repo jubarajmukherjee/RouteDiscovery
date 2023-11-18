@@ -9,6 +9,7 @@
 #define DHTPIN 4
 #define DHTTYPE DHT11
 #define RatioMQ135CleanAir 3.6//RS / R0 = 3.6 ppm  
+#define measurePin 39 //adc pin of esp32 can be used for analog input
 DHT dht(DHTPIN, DHTTYPE);
 
 #define         Board                   ("ESP-32") // Wemos ESP-32 or other board, whatever have ESP32 core.
@@ -120,7 +121,7 @@ MQ135.setA(110.47); MQ135.setB(-2.862); // Configure the equation to to calculat
   CO       | 605.18 | -3.937  
   Alcohol  | 77.255 | -3.18 
   CO2      | 110.47 | -2.862
-  Toluen  | 44.947 | -3.445
+  Toluene  | 44.947 | -3.445
   NH3     | 102.2  | -2.473
   Aceton  | 34.668 | -3.369
   */
@@ -182,6 +183,11 @@ return;
   //we can find NH3 and CO only using MQ-135, hence we added CO2 in the AQI calculation also.
   // since we need data real time, we are not calculating the 8 hrs average or the 24 hours average or the 16 hour average.
   // we are calculating the current values only.
+
+  //dust concentration calculation
+  double read = analogRead(measurePin);
+  double voltage = read * 5.0 / 1024.0;
+  double dustDensity = voltage * 170 - 0.1;
      Serial.print(" CO2 = ");
      Serial.println(CO2);
      Serial.print(" NH3 = ");
@@ -194,6 +200,8 @@ return;
      Serial.println(temperature);
      Serial.print(" Humidity = ");
      Serial.println(humidity);
+     Serial.print("Dust Density in micrograms per meter cube= ");
+     Serial.println(dustDensity);
 
 ThingSpeak.begin(client);
 
@@ -203,6 +211,7 @@ ThingSpeak.begin(client);
     ThingSpeak.setField(4,CO);
     ThingSpeak.setField(5,NH3);
     ThingSpeak.setField(6,AQI);
+    ThingSpeak.setField(7,((float)dustDensity));
    int x = ThingSpeak.writeFields(THINGSPEAK_CHANNEL_ID,THINGSPEAK_API_KEY);
    if(x == 200)
    {
