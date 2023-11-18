@@ -2,18 +2,45 @@ import pandas as pd
 import time
 import random
 import numpy as np
+import urllib.request as urllib2
+import json
 from sklearn.cluster import KMeans
 km = KMeans(n_clusters=3,n_init='auto')
+READ_API_KEY='RSM668VKEAVTD39O'
+CHANNEL_ID= '2329603'
+
+def read_koramangala2():
+    TS = urllib2.urlopen("http://api.thingspeak.com/channels/%s/feeds/last.json?api_key=%s" \
+                       % (CHANNEL_ID,READ_API_KEY))
+
+    response = TS.read()
+    data2=json.loads(response)   
+    TS.close()
+    data2 = pd.DataFrame({'temp':[data2['field1']],'humid':[data2['field2']],'AQI':[data2['field6']],'Dust':[data2['field7']]})
+    
+    return data2
+
+def read_koramangala():
+    TS = urllib2.urlopen("http://api.thingspeak.com/channels/%s/feeds/?api_key=%s" 
+                       % (CHANNEL_ID,READ_API_KEY))
+
+    response = TS.read()
+    data2=json.loads(response)   
+    TS.close()
+    data2=data2['feeds']
+    data2= pd.DataFrame(data2)
+    data2 = data2.drop(['created_at','entry_id','field3','field4','field5'],axis=1)
+    data2.columns = ['temp','humid','AQI','Dust']
+    return data2
 
 # Sample data for updating parameters (except locations)
 def generate_random_data():
-    
-    aqi_in = random.randint(20, 110)
-    pm25 = random.randint(0, 60)
-    pm10 = random.randint(20, 110)
-    temp = random.uniform(28, 31)
-    humid = random.randint(60, 70)
-    return aqi_in, pm25, pm10, temp, humid
+    data2 = read_koramangala()
+    AQI = random.uniform(float(np.min(data2['AQI'])),float(np.max(data2['AQI'])))
+    Dust = random.uniform(float(np.min(data2['Dust'])), float(np.max(data2['Dust'])))
+    temp = random.uniform(float(np.min(data2['temp'])), float(np.max(data2['temp'])))
+    humid = random.uniform(float(np.min(data2['humid'])),float(np.max(data2['humid'])))
+    return AQI, Dust, temp, humid
 
 # Define the initial dataset with all locations
 data = {
@@ -68,37 +95,43 @@ data = {
           'Domlur',
           'HSR Layout'
     ],
-    'AQI-IN': [29] * 49,
-    'PM2.5': [16] * 49,
-    'PM10': [29] * 49,
-    'Temp': [31] * 49,
-    'Humid': [62] * 49
+    'AQI': [29.0] * 49,
+    'Dust': [16.0] * 49,
+    'temp': [31.0] * 49,
+    'humid': [62.0] * 49
 }
 
 df = pd.DataFrame(data)
 
 while True:
     # Update parameters (except Locations) with new data
+    
     for i in range(len(df)):
-        aqi_in, pm25, pm10, temp, humid = generate_random_data()
-        df.at[i, 'AQI-IN'] = aqi_in
-        df.at[i, 'PM2.5'] = pm25
-        df.at[i, 'PM10'] = pm10
-        df.at[i, 'Temp'] = temp
-        df.at[i, 'Humid'] = humid
+        if df.at[i,'Locations'] == 'Koramangala':
+            data3 = read_koramangala2()
+            df.at[i, 'AQI'] = float(data3.iloc[0]['AQI'])
+            df.at[i, 'Dust'] = float(data3.iloc[0]['Dust'])
+            df.at[i, 'temp'] = float(data3.iloc[0]['temp'])
+            df.at[i, 'humid'] = float(data3.iloc[0]['humid'])
+
+        else:
+            AQI, Dust, temp, humid = generate_random_data()
+            df.at[i, 'AQI'] = AQI
+            df.at[i, 'Dust'] = Dust
+            df.at[i, 'temp'] = temp
+            df.at[i, 'humid'] = humid
     
     # Display the updated DataFrame
     
-    pred = km.fit_predict(df[['AQI-IN','PM2.5','PM10','Temp','Humid']])
-    df2 = pd.DataFrame(km.cluster_centers_,columns=['AQI','PM1','PM2','TEMP','HUMID'])
+    pred = km.fit_predict(df[['AQI','Dust','temp','humid']])
+    df2 = pd.DataFrame(km.cluster_centers_,columns=['AQI','Dust','temp','humid'])
     w1 = 0.6
-    w2 = 0.15
-    w3 = 0.15
+    w2 = 0.3
     w4=  0.05
     w5 = 0.05
-    s0 = np.mean(df2.iloc[0][0]*w1+df2.iloc[0][1]*w2+df2.iloc[0][2]*w3+df2.iloc[0][3]*w4+df2.iloc[0][4]*w5/(w1+w2+w3+w4+w5))
-    s1 = np.mean(df2.iloc[1][0]*w1+df2.iloc[1][1]*w2+df2.iloc[1][2]*w3+df2.iloc[1][3]*w4+df2.iloc[1][4]*w5/(w1+w2+w3+w4+w5))
-    s2 = np.mean(df2.iloc[2][0]*w1+df2.iloc[2][1]*w2+df2.iloc[2][2]*w3+df2.iloc[2][3]*w4+df2.iloc[2][4]*w5/(w1+w2+w3+w4+w5))
+    s0 = np.mean(df2.iloc[0][0]*w1+df2.iloc[0][1]*w2+df2.iloc[0][2]*w4+df2.iloc[0][3]*w5/(w1+w2+w4+w5))
+    s1 = np.mean(df2.iloc[1][0]*w1+df2.iloc[1][1]*w2+df2.iloc[1][2]*w4+df2.iloc[1][3]*w5/(w1+w2+w4+w5))
+    s2 = np.mean(df2.iloc[2][0]*w1+df2.iloc[2][1]*w2+df2.iloc[2][2]*w4+df2.iloc[2][3]*w5/(w1+w2+w4+w5))
     L = [s0,s1,s2]
     L.sort()
     print(L)
